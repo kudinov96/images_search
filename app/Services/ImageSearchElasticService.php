@@ -32,13 +32,36 @@ class ImageSearchElasticService
                 $this->client->indices()->create([
                     'index' => 'images',
                     'body' => [
+                        'settings' => [
+                            'analysis' => [
+                                'tokenizer' => [
+                                    'standard_tokenizer' => [
+                                        'type' => 'standard',
+                                    ],
+                                ],
+                                'filter' => [
+                                    'english_stemmer' => [
+                                        'type' => 'stemmer',
+                                        'language' => 'english',
+                                    ],
+                                ],
+                                'analyzer' => [
+                                    'default' => [
+                                        'type' => 'custom',
+                                        'tokenizer' => 'standard_tokenizer',
+                                        'filter' => ['lowercase', 'english_stemmer'],
+                                    ],
+                                ],
+                            ],
+                        ],
                         'mappings' => [
                             'properties' => [
                                 'tags' => [
                                     'type' => 'nested',
                                     'properties' => [
                                         'tag' => [
-                                            'type' => 'keyword',
+                                            'type' => 'text',
+                                            'analyzer' => 'default'
                                         ],
                                         'order' => [
                                             'type' => 'integer',
@@ -106,7 +129,6 @@ class ImageSearchElasticService
         return true;
     }
 
-
     public function searchImagesByTags(string $searchQuery, int $page = 1, int $perPage = 10): array
     {
         $searchTags = explode(" ", $searchQuery);
@@ -119,7 +141,7 @@ class ImageSearchElasticService
                     'query' => [
                         'bool' => [
                             'must' => [
-                                [ 'term' => [ 'tags.tag' => $tag ] ],
+                                [ 'match' => [ 'tags.tag' => $tag ] ],
                             ],
                         ],
                     ],
