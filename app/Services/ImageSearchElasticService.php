@@ -32,7 +32,7 @@ class ImageSearchElasticService
                 $this->client->indices()->create([
                     'index' => 'images',
                     'body' => [
-                        'settings' => [
+                        /*'settings' => [
                             'analysis' => [
                                 'tokenizer' => [
                                     'standard_tokenizer' => [
@@ -53,7 +53,7 @@ class ImageSearchElasticService
                                     ],
                                 ],
                             ],
-                        ],
+                        ],*/
                         'mappings' => [
                             'properties' => [
                                 'tags' => [
@@ -61,7 +61,7 @@ class ImageSearchElasticService
                                     'properties' => [
                                         'tag' => [
                                             'type' => 'text',
-                                            'analyzer' => 'default'
+                                            /*'analyzer' => 'default'*/
                                         ],
                                         'order' => [
                                             'type' => 'integer',
@@ -77,7 +77,7 @@ class ImageSearchElasticService
                 ]);
             }
         } catch (\Throwable $e) {
-            Log::error("Error while creating index: " . $e->getMessage());
+            Log::error("createIndexIfNeeded: " . $e->getMessage());
         }
     }
 
@@ -118,11 +118,11 @@ class ImageSearchElasticService
                 $response = $this->client->bulk(['body' => $bulkParams]);
 
                 if (isset($response['errors']) && $response['errors']) {
-                    Log::error('Bulk indexing errors: ' . json_encode($response['items']));
+                    Log::error('indexImages bulk errors: ' . json_encode($response['items']));
                 }
             }
         } catch (\Throwable $ex) {
-            Log::error($ex->getMessage());
+            Log::error("indexImages: " . $ex->getMessage());
             return false;
         }
 
@@ -131,7 +131,8 @@ class ImageSearchElasticService
 
     public function searchImagesByTags(string $searchQuery, int $page = 1, int $perPage = 10): array
     {
-        $searchTags = explode(" ", $searchQuery);
+        $searchTags[] = $searchQuery;
+        $searchTags = array_merge($searchTags, explode(" ", $searchQuery));
 
         $shouldParts = [];
         foreach ($searchTags as $tag) {
@@ -142,7 +143,25 @@ class ImageSearchElasticService
                         'bool' => [
                             'must' => [
                                 [ 'match' => [ 'tags.tag' => $tag ] ],
+                                //[ 'term' => [ 'tags.tag' => $tag ] ],
                             ],
+                            /*'should' => [
+                                [
+                                    'match_phrase' => [
+                                        'tags.tag' => [
+                                            'query' => $tag,
+                                            'boost' => 2.0,
+                                        ],
+                                    ],
+                                ],
+                                [
+                                    'term' => [
+                                        'tags.tag' => [
+                                            'value' => $tag,
+                                        ],
+                                    ],
+                                ],
+                            ],*/
                         ],
                     ],
                     'score_mode' => 'max',
@@ -151,7 +170,7 @@ class ImageSearchElasticService
         }
 
         $query = [
-            //'track_total_hits' => true,
+            'track_total_hits' => 10000, // точное количество считать или нет
             'from' => ($page - 1) * $perPage,
             'size' => $perPage,
             'query' => [
@@ -168,10 +187,8 @@ class ImageSearchElasticService
                         'source' => "
                         double score = 0;
                         for (tag in params['_source']['tags']) {
-                            for (int i = 0; i < params.searchTags.length; i++) {
-                                if (tag.tag == params.searchTags[i]) {
-                                    score += 1.0 / (tag.order + 1);
-                                }
+                            if (params.searchTags.contains(tag.tag)) {
+                                score += 1.0 / (tag.order + 1);
                             }
                         }
                         return score;
@@ -198,8 +215,13 @@ class ImageSearchElasticService
                 'currentPage' => $page,
             ];
         } catch (\Throwable $ex) {
-            Log::error($ex->getMessage());
-            return [];
+            Log::error("searchImagesByTags: " . $ex->getMessage());
+            return [
+                'data' => [],
+                'total' => 0,
+                'perPage' => $perPage,
+                'currentPage' => 1,
+            ];
         }
     }
 }

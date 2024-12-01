@@ -1,4 +1,4 @@
-<form action="{{ route("search.search") }}" method="GET">
+<form action="{{ route("image.search") }}" method="GET">
     @csrf
     @method("POST")
 

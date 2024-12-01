@@ -8,7 +8,8 @@
             <div style="margin-bottom: 15px;">
                 <b>id:         </b> {{ $item["_id"] }}<br>
                 <b>tags:       </b> {{ json_encode($item["_source"]["tags"]) }}<br>
-                <b>thumb_file: </b> {{ $item["_source"]["thumb_file"] }}
+                <b>thumb_file: </b> {{ $item["_source"]["thumb_file"] }}<br>
+                <b>url: </b> <a target="_blank" href="https://www.shutterstock.com/image/{{ $item["_id"] }}">https://www.shutterstock.com/image/{{ $item["_id"] }}</a>
             </div>
         @endforeach
     </div>

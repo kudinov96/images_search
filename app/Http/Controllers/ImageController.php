@@ -9,7 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Pagination\LengthAwarePaginator;
 
-class SearchController extends Controller
+class ImageController extends Controller
 {
     public function search(SearchRequest $request, ImageSearchElasticService $imageSearchElasticService)
     {
