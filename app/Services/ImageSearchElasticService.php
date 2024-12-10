@@ -131,8 +131,28 @@ class ImageSearchElasticService
 
     public function searchImagesByTags(string $searchQuery, int $page = 1, int $perPage = 10): array
     {
-        $searchTags[] = $searchQuery;
+        /*$searchTags[] = $searchQuery;
+        $searchTags = array_merge($searchTags, explode(" ", $searchQuery));*/
+
+        $searchTags = explode(" ", $searchQuery);
+        dump($searchTags);
+
+        /*$searchTags = $this->generatePhraseArray($searchQuery);
         $searchTags = array_merge($searchTags, explode(" ", $searchQuery));
+        $searchTags = array_unique($searchTags);
+
+        $singleTags = [];
+        $compoundPhrases = [];
+
+        foreach ($searchTags as $tag) {
+            if (strpos($tag, " ") === false) {
+                $singleTags[] = $tag;
+            } else {
+                $compoundPhrases[] = $tag;
+            }
+        }
+
+        $searchTags = array_merge($singleTags, $compoundPhrases);*/
 
         $shouldParts = [];
         foreach ($searchTags as $tag) {
@@ -175,8 +195,8 @@ class ImageSearchElasticService
             'size' => $perPage,
             'query' => [
                 'bool' => [
-                    'should' => $shouldParts,
-                    'minimum_should_match' => 1,
+                    'must' => $shouldParts,
+                    /*'minimum_should_match' => 1,*/
                 ],
             ],
             'sort' => [
@@ -223,5 +243,17 @@ class ImageSearchElasticService
                 'currentPage' => 1,
             ];
         }
+    }
+
+    private function generatePhraseArray($phrase): array
+    {
+        $result = [];
+        $words = explode(" ", $phrase);
+        while (!empty($words)) {
+            $result[] = implode(" ", $words);
+            array_pop($words);
+        }
+
+        return $result;
     }
 }

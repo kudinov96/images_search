@@ -15,7 +15,7 @@ class ImageController extends Controller
     {
         $searchQuery = $request->input('search');
         $page = $request->input('page', 1);
-        $perPage = 10;
+        $perPage = 100;
 
         $results = $imageSearchElasticService->searchImagesByTags($searchQuery, $page, $perPage);
 
