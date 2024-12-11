@@ -136,7 +136,6 @@ class ImageSearchElasticService
         $searchTags = array_merge($searchTags, explode(" ", $searchQuery));*/
 
         $searchTags = explode(" ", $searchQuery);
-        dump($searchTags);
 
         /*$searchTags = $this->generatePhraseArray($searchQuery);
         $searchTags = array_merge($searchTags, explode(" ", $searchQuery));
