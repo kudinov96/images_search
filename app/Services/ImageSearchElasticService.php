@@ -16,7 +16,7 @@ class ImageSearchElasticService
         $this->client = ClientBuilder::create()
             ->setHosts(config('elasticsearch.hosts'))
             ->setBasicAuthentication('elastic', config('elasticsearch.password'))
-            ->setSSLCert("/home/ikudinov/sis.pics/elastic.crt")
+            ->setCABundle("/home/ikudinov/sis.pics/elastic.crt")
             ->build();
     }
 
